@@ -21,8 +21,8 @@ To run this outside the warrior:
     sudo apt-get update
     sudo apt-get install -y build-essential lua5.1 liblua5.1-0-dev python python-setuptools python-dev git-core openssl libssl-dev python-pip rsync gcc make git screen
     pip install --user seesaw
-    git clone https://github.com/ArchiveTeam/xanga-grab
-    cd xanga-grab
+    git clone https://github.com/ArchiveTeam/patch-grab
+    cd patch-grab
     ./get-wget-lua.sh
     
     # Start downloading with:
@@ -37,8 +37,8 @@ To run this outside the warrior:
     python setup.py install --user
     cd ..
     ~/.local/bin/pip install --user seesaw
-    git clone https://github.com/ArchiveTeam/xanga-grab
-    cd xanga-grab
+    git clone https://github.com/ArchiveTeam/patch-grab
+    cd patch-grab
     ./get-wget-lua.sh
 
     # Start downloading with:
@@ -53,8 +53,8 @@ To run this outside the warrior:
     python setup.py install --user
     cd ..
     ~/.local/bin/pip install --user seesaw
-    git clone https://github.com/ArchiveTeam/xanga-grab
-    cd xanga-grab
+    git clone https://github.com/ArchiveTeam/patch-grab
+    cd patch-grab
     ./get-wget-lua.sh
 
     # Start downloading with:
