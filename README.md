@@ -5,7 +5,7 @@ patch-grab
 
 This (will become) a Seesaw script for grabbing patch.com sites.
 
-The dashboard for this grab is http://patch.at.ninjawedding.org/patchy.
+The dashboard for this grab is http://quilt.at.ninjawedding.org/patchy.
 
 If you are not familiar with Archive Team grabs: this program 
 repeatedly grabs a user from the tracker, downloads them via 
