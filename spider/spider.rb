@@ -158,13 +158,14 @@ Aggregators = Aggregator.pool
 
 # Keys we use:
 #
-# patch.com       - the full set of links for all patch.com sites
-# patch.com:todo  - links pending examination
-# patch.com:eval  - links being evaluated
+# patch.com                - the full set of links for all patch.com sites
+# patch.com:todo           - links pending examination
+# patch.com:eval:hostname  - links being evaluated
 
+hostname = `hostname -f`.chomp
 host_key = "patch.com".freeze
 todo_key = "patch.com:todo".freeze
-eval_key = "patch.com:eval".freeze 
+eval_key = "patch.com:eval:#{hostname}".freeze 
 Celluloid.logger.info "Moving #{eval_key} back to #{todo_key}"
 R.sunionstore todo_key, todo_key, eval_key
 R.del eval_key
