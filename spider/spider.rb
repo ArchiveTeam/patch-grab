@@ -61,6 +61,9 @@ class Grabber
           elsif resp.code == '404'
             warn "GET #{url} returned 404; returning empty set"
             break
+          else
+            error "GET #{url} returned #{resp.code}; returning empty set"
+            break
           end
         when Net::HTTPRedirection then
           if limit == 0
@@ -71,8 +74,14 @@ class Grabber
             url = absolutize(host, proto, resp['location'])
             limit -= 1
           end
+        when Net::HTTPServerError then
+          error "GET #{url} returned #{resp.code}; returning empty set"
+          break
+        else
+          warn "GET #{url} returned #{resp.code}, which is unhandled; returning empty set"
+          break
         end
-      rescue EOFError, Errno::ECONNRESET => e
+      rescue EOFError, Errno::ECONNRESET, Errno::ETIMEDOUT => e
         if tries > 0
           error "Got #{e.class} on GET #{url}, retrying #{tries} times"
           retry
