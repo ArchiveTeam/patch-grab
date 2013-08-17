@@ -1,9 +1,23 @@
 require 'celluloid'
 require 'nokogiri'
 require 'redis'
-require 'shellwords'
 require 'uri'
 require 'securerandom'
+require 'net/http'
+
+# URI.parse can't handle bookmarks or improperly escaped URLs, and
+# patch.com sites contain both.  We use a slightly less sophisticated
+# but more tolerant algorithm here.
+#
+# Is it absolute? If so, use it as is.
+def absolutize(host, proto, url)
+  if url =~ /^http/
+    url
+  else
+    # Otherwise, expand the URL.
+    "#{proto}://#{host}#{url}"
+  end
+end
 
 seed = ARGV[0]
 R = Redis.new
@@ -22,20 +36,58 @@ class Grabber
   include Celluloid::Logger
 
   def get(url)
-    host = URI.parse(URI.escape(url)).host
-    cmd = "curl -sfkL -A 'ArchiveTeam/1.5' #{Shellwords.shellescape(url)}"
+    limit = 5
+    tries = 3
 
-    info "Running #{cmd}"
-    doc = Nokogiri.HTML(`#{cmd}`)
+    resp = loop do
+      info "GET #{url}"
 
-    if !$?.success?
-      if $?.exitstatus == 47
-        warn "Infinite redirection detected for #{cmd}; stopping grab"
-        return []
-      else
-        raise "Failed to get #{url} (curl status: #{$?})"
+      begin
+        tries -= 1
+        resp = Net::HTTP.get_response(URI(url))
+
+        uri = URI.parse(URI.escape(url))
+        host = uri.host
+        proto = uri.scheme
+
+        case resp
+        when Net::HTTPSuccess then
+          break resp
+        when Net::HTTPClientError then
+          if resp.code == '420' then
+            fatal "GET #{url} responsed with rate-limit error"
+            fatal resp.body.inspect
+            fail "Rate-limited; restart later"
+          elsif resp.code == '404'
+            warn "GET #{url} returned 404; returning empty set"
+            break
+          end
+        when Net::HTTPRedirection then
+          if limit == 0
+            error "GET #{url} exceeded redirection limit; returning empty set"
+            break
+          else
+            warn "#{url} -> #{resp['location']}"
+            url = absolutize(host, proto, resp['location'])
+            limit -= 1
+          end
+        end
+      rescue EOFError, Errno::ECONNRESET => e
+        if tries > 0
+          error "Got #{e.class} on GET #{url}, retrying #{tries} times"
+          retry
+        else
+          error "Got #{e.class} on GET #{url}; returning empty set"
+          break
+        end
       end
     end
+
+    if !resp
+      return GrabberResult.new.tap { |gr| gr.url = url; gr.links = [] }
+    end
+
+    doc = Nokogiri.HTML(resp.body)
 
     links = (doc/'a').map { |e| e['href'] }.select do |href|
       href =~ %r{^(?:/|https?://)}
@@ -43,19 +95,12 @@ class Grabber
 
     GrabberResult.new.tap do |gr|
       gr.url = url
-      gr.links = links.map do |l|
-        # URI.parse can't handle bookmarks or improperly escaped URLs, and
-        # patch.com sites contain both.  We use a slightly less sophisticated
-        # but more tolerant algorithm here.
-        #
-        # Is it absolute? If so, use it as is.
-        if l =~ /^http/
-          l
-        else
-          # Otherwise, expand the URL.
-          "#{host}#{l}"
-        end
-      end
+
+      uri = URI.parse(URI.escape(url))
+      host = uri.host
+      proto = uri.scheme
+
+      gr.links = links.map { |l| absolutize(host, proto, l) }
 
       if gr.links.length == 0
         warn "Found zero links for #{url}, which is really bizarre"
@@ -77,15 +122,15 @@ class Aggregator
 
   def get(url, host_key, todo_key)
     result = Grabbers.future.get(url).value
-    patches = result.links.select { |l| l =~ /^http.*?\.patch\.com/ }
+    patches = result.links.select { |l| l =~ %r{\Ahttps?://[^\.]+?\.patch\.com/} }
 
     if patches.length < 1
-      info "[#@id] No *.patch.com URLs found for #{url}"
+      info "[#@id] No *.patch.com URLs found for #{result.url}"
     else
       new = R.sadd(todo_key, patches)
       found = R.sunionstore(host_key, host_key, todo_key)
 
-      info "[#@id] #{new} new URLs on #{url}, #{found} URLs total"
+      info "[#@id] #{new} new URLs on #{result.url}, #{found} URLs total"
     end
 
     delay = gen_delay
@@ -95,7 +140,7 @@ class Aggregator
   end
 
   def gen_delay
-    rand(42) + 60
+    rand(60) + 72
   end
 end
 
@@ -116,6 +161,11 @@ R.sunionstore todo_key, todo_key, eval_key
 R.del eval_key
 
 Celluloid.logger.info "#{R.scard(todo_key)} URLs in #{todo_key}"
+
+if [host_key, todo_key, eval_key].none? { |k| R.sismember(k, seed) }
+  Celluloid.logger.info "Adding #{seed} to #{todo_key}"
+  R.sadd(todo_key, seed)
+end
 
 loop do
   count = [R.scard(todo_key), 8].min
