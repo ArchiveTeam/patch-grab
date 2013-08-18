@@ -50,6 +50,19 @@ wget.callbacks.httploop_result = function(url, err, http_status) do
 			io.stdout:flush()
 		end
 
+		-- Finally, check whether or not this was a *.patch.com URL.
+		-- If it was, it's subject to rate limits, and we need to wait
+		-- a bit.  Patch.com's asset servers don't seem to contribute
+		-- to rate limits, so we just go through those as fast as we
+		-- can.
+		local theurl = url.url
+
+		if (string.match(theurl, '%.patch.com')) then
+			wait = math.random(8, 12)
+			io.stdout:write("Waiting "..wait.." seconds after fetching "..theurl.."\n")
+			os.execute('sleep '..wait)
+		end
+
 		return wget.actions.NOTHING
 	end
 end

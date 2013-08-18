@@ -88,8 +88,6 @@ pipeline = Pipeline(
 			"-e", "robots=off",
 			"--waitretry", "5",
 			"--timeout", "60",
-			"--random-wait",
-			"--wait", "10",
 			"-i", ItemInterpolation("%(manifest_fn)s")
 		],
 		max_tries = 3)
