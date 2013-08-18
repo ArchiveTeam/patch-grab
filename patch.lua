@@ -22,7 +22,6 @@ wget.callbacks.download_child_p = function(urlpos, parent, depth, start_url_pars
 	local hash = md5.Calc(url)
 
 	if (seen[hash]) then
-		io.stdout:write("Skipping "..url.."\n")
 		return false
 	else
 		return true
