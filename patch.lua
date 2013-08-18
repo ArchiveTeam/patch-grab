@@ -37,7 +37,7 @@ wget.callbacks.httploop_result = function(url, err, http_status) do
 		io.stdout:write("Scraping "..url.url.." for links\n")
 		io.stdout:flush()
 
-		ret = os.execute("python scrape.py "..loc.. " | curl -X POST -m 10 --data-binary @- "..url_host)
+		ret = os.execute("python scrape.py "..loc.. " | curl -f -X POST -m 10 --basic -u '"..creds.."' --data-binary @- "..url_host)
 
 		io.stdout:write("Sent links for "..url.url.." to "..url_host.."\n")
 		io.stdout:flush()
