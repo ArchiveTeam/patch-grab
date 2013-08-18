@@ -84,6 +84,7 @@ pipeline = Pipeline(
 			"--warc-header", "patchy-script-version: " + VERSION,
 			"--warc-header", ItemInterpolation("patchy-item-name: %(item_name)s"),
 			"--page-requisites",
+			"--span-hosts",
 			"-e", "robots=off",
 			"--waitretry", "5",
 			"--timeout", "60",
