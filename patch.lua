@@ -9,7 +9,7 @@ local url_host = "http://quilt.at.ninjawedding.org:81"
 local creds = "ArchiveTeam:3boiqJvshItPBa66"
 
 wget.callbacks.httploop_result = function(url, err, http_status) do
-	code = http_status.statcode
+	local code = http_status.statcode
 
 	-- HTTP 420 means that we're rate-limited.  We have to abort.
 	if (code == 420) then
@@ -23,9 +23,8 @@ wget.callbacks.httploop_result = function(url, err, http_status) do
 	-- On code 2xx, extract URLs and send them to the URL storage
 	-- mechanism.  We only do this for things that look like HTML files.
 	if (code >= 200 and code <= 299) then
-		loc = http_status.local_file
-
-		out = os.capture("file "..loc)
+		local loc = http_status.local_file
+		local out = os.capture("file "..loc)
 
 		if (string.find(out, "HTML") == nil) then
 			-- OK, this probably isn't an HTML document; don't analyze it
@@ -36,7 +35,7 @@ wget.callbacks.httploop_result = function(url, err, http_status) do
 		io.stdout:write("Scraping "..url.url.." for links\n")
 		io.stdout:flush()
 
-		ret = os.execute("python scrape.py "..loc.. " | curl -f -X POST -m 10 --basic -u '"..creds.."' --data-binary @- "..url_host)
+		local ret = os.execute("python scrape.py "..loc.. " | curl -f -X POST -m 10 --basic -u '"..creds.."' --data-binary @- "..url_host)
 
 		io.stdout:write("Sent links for "..url.url.." to "..url_host.."\n")
 		io.stdout:flush()
