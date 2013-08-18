@@ -15,7 +15,7 @@ wget.callbacks.httploop_result = function(url, err, http_status) do
 	if (code == 420) then
 		io.stdout:write("Server returned status "..code.."; you've exceeded rate limits.\n")
 		io.stdout:write("You may want to move to another IP.  Exiting...\n")
-		io.stdout.flush()
+		io.stdout:flush()
 
 		return wget.actions.ABORT
 	end
