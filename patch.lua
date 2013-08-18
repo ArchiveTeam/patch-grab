@@ -26,7 +26,6 @@ wget.callbacks.httploop_result = function(url, err, http_status) do
 		loc = http_status.local_file
 
 		out = os.capture("file "..loc)
-		io.stdout:write(string.gsub(out, "\n", "").."\n")
 
 		if (string.find(out, "HTML") == nil) then
 			-- OK, this probably isn't an HTML document; don't analyze it
