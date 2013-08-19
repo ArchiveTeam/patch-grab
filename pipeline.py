@@ -3,7 +3,8 @@ import os
 import os.path
 import shutil
 import json
-import requests
+
+from tornado.httpclient import HTTPClient, HTTPRequest
 
 from seesaw.project import *
 from seesaw.item import *
@@ -41,13 +42,19 @@ class ExpandItem(SimpleTask):
 	def __init__(self):
 		SimpleTask.__init__(self, "ExpandItem")
 
-	def process(self, item):
-		resp = requests.get('%s/%s' % (RESOLVER, item["item_name"]), auth=(CREDS[0], CREDS[1]))
+		self.http_client = HTTPClient()
 
-		if resp.status_code != 200:
+	def process(self, item):
+		req = HTTPRequest(url='%s/%s' % (RESOLVER, item["item_name"]),
+				auth_username=CREDS[0],
+				auth_password=CREDS[1])
+
+		resp = self.http_client.fetch(req)
+
+		if resp.code != 200:
 			raise CannotRetrieveItemError(resp.status_code)
 
-		doc = resp.json()
+		doc = json.loads(resp.body)
 		manifest_fn = "%s/manifest" % item["item_dir"]
 
 		f = open(manifest_fn, 'w')
