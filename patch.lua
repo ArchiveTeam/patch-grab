@@ -11,8 +11,6 @@ local creds = "ArchiveTeam:3boiqJvshItPBa66"
 -- The httploop_result callback seems to get called on every URL we've *ever*
 -- seen when working through the manifest.  To prevent work explosion, we keep
 -- track of URLs we've already seen.
---
--- We want to keep additional memory use to a minimum, so we store MD5s here.
 local seen = {}
 
 wget.callbacks.download_child_p = function(urlpos, parent, depth, start_url_parsed, iri, verdict, reason)
