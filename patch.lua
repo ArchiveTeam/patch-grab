@@ -77,7 +77,7 @@ wget.callbacks.httploop_result = function(url, err, http_status)
 			local theurl = url.url
 
 			if (string.match(theurl, '%.patch.com')) then
-				wait = math.random(8, 12)
+				wait = math.random(5, 8)
 				io.stdout:write("Waiting "..wait.." seconds after fetching "..theurl.."\n")
 				os.execute('sleep '..wait)
 			end
