@@ -1,15 +1,19 @@
 patch-grab
 ==========
 
-**NOTE**: Still under development; not yet intended for general use.
-
-This (will become) a Seesaw script for grabbing patch.com sites.
+This is a Seesaw script for grabbing patch.com sites.
 
 The dashboard for this grab is http://quilt.at.ninjawedding.org/patchy.
 
 If you are not familiar with Archive Team grabs: this program 
 repeatedly grabs a user from the tracker, downloads them via 
 HTTP, then uploads the compressed archive to a collection server.
+
+Running in the warrior
+----------------------
+
+Not yet tested.  We're working on it.  In the meantime, try the directions
+below.
 
 Running without a warrior
 -------------------------
