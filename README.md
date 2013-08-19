@@ -19,8 +19,8 @@ To run this outside the warrior:
 (Ubuntu / Debian 7)
 
     sudo apt-get update
-    sudo apt-get install -y build-essential lua5.1 liblua5.1-0-dev python python-setuptools python-dev git-core openssl libssl-dev python-pip rsync gcc make git screen
-    pip install --user seesaw
+    sudo apt-get install -y build-essential lua5.1 liblua5.1-0-dev python python-setuptools python-dev git-core openssl libssl-dev python-pip rsync gcc make git screen libxml2-dev libxslt-dev
+    pip install --user seesaw lxml
     git clone https://github.com/ArchiveTeam/patch-grab
     cd patch-grab
     ./get-wget-lua.sh
@@ -31,12 +31,12 @@ To run this outside the warrior:
 (Debian 6)
 
     sudo apt-get update
-    sudo apt-get install -y build-essential lua5.1 liblua5.1-0-dev python python-setuptools python-dev git-core openssl libssl-dev python-pip rsync gcc make git screen
+    sudo apt-get install -y build-essential lua5.1 liblua5.1-0-dev python python-setuptools python-dev git-core openssl libssl-dev python-pip rsync gcc make git screen libxml2-dev libxslt-dev
     wget --no-check-certificate https://pypi.python.org/packages/source/p/pip/pip-1.3.1.tar.gz tar -xzvf pip-1.3.1.tar.gz
     cd pip-1.3.1
     python setup.py install --user
     cd ..
-    ~/.local/bin/pip install --user seesaw
+    ~/.local/bin/pip install --user seesaw lxml
     git clone https://github.com/ArchiveTeam/patch-grab
     cd patch-grab
     ./get-wget-lua.sh
@@ -46,13 +46,13 @@ To run this outside the warrior:
 
 (CentOS / RHEL / Amazon Linux)
 
-    sudo yum install lua lua-devel python-devel python-distribute git openssl-devel rsync gcc make screen
+    sudo yum install lua lua-devel python-devel python-distribute git openssl-devel rsync gcc make screen libxml2-devel libxslt-devel
     wget --no-check-certificate https://pypi.python.org/packages/source/p/pip/pip-1.3.1.tar.gz
     tar -xzvf pip-1.3.1.tar.gz
     cd pip-1.3.1
     python setup.py install --user
     cd ..
-    ~/.local/bin/pip install --user seesaw
+    ~/.local/bin/pip install --user seesaw lxml
     git clone https://github.com/ArchiveTeam/patch-grab
     cd patch-grab
     ./get-wget-lua.sh
