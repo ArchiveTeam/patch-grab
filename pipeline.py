@@ -22,14 +22,32 @@ RESOLVER = "http://quilt.at.ninjawedding.org:81"
 CREDS = "ArchiveTeam:3boiqJvshItPBa66".split(':')
 
 class PrepareDirectories(SimpleTask):
-	def __init__(self):
-		SimpleTask.__init__(self, "PrepareDirectories")
+  def __init__(self, warc_prefix):
+    SimpleTask.__init__(self, "PrepareDirectories")
+    self.warc_prefix = warc_prefix
 
-	def process(self, item):
-		item_dir = "%s/%s" % (DATA_DIR, item["item_name"])
-		os.makedirs(item_dir + "/files")
+  def process(self, item):
+    item_name = item["item_name"]
+    dirname = "/".join(( item["data_dir"], item_name ))
 
-		item["item_dir"] = item_dir
+    if os.path.isdir(dirname):
+      shutil.rmtree(dirname)
+    os.makedirs(dirname)
+
+    item["item_dir"] = dirname
+    item["warc_file_base"] = "%s-%s-%s" % (self.warc_prefix, item_name, time.strftime("%Y%m%d-%H%M%S"))
+
+    open("%(item_dir)s/%(warc_file_base)s.warc.gz" % item, "w").close()
+
+class MoveFiles(SimpleTask):
+  def __init__(self):
+    SimpleTask.__init__(self, "MoveFiles")
+
+  def process(self, item):
+    os.rename("%(item_dir)s/%(warc_file_base)s.warc.gz" % item,
+              "%(data_dir)s/%(warc_file_base)s.warc.gz" % item)
+
+    shutil.rmtree("%(item_dir)s" % item)
 
 class CannotRetrieveItemError(Exception):
 	def __init__(self, code):
@@ -77,34 +95,50 @@ project = Project(
 
 pipeline = Pipeline(
 	GetItemFromTracker(TRACKER, downloader),
-	PrepareDirectories(),
+	PrepareDirectories(warc_prefix="patch.com"),
 	ExpandItem(),
-	LimitConcurrent(1,
-		WgetDownload([ "./wget-lua",
-			"-U", USER_AGENT,
-			"-o", ItemInterpolation("%(item_dir)s/wget.log"),
-			"--lua-script", "patch.lua",
-			"--output-document", ItemInterpolation("%(item_dir)s/wget.tmp"),
-			"--truncate-output",
-			"--warc-file", ItemInterpolation("%(item_dir)s/%(item_name)s"),
-			"--warc-header", "operator: Archive Team",
-			"--warc-header", "patchy-script-version: " + VERSION,
-			"--warc-header", ItemInterpolation("patchy-item-name: %(item_name)s"),
-			"--page-requisites",
-			"--span-hosts",
-			"-e", "robots=off",
-			"--waitretry", "5",
-			"--timeout", "60",
-			"-i", ItemInterpolation("%(manifest_fn)s")
-		],
-		max_tries = 3)
-	),
+	WgetDownload([ "./wget-lua",
+		"-U", USER_AGENT,
+		"-o", ItemInterpolation("%(item_dir)s/wget.log"),
+		"--lua-script", "patch.lua",
+		"--load-cookies", ItemInterpolation("%(item_dir)s/cookies.txt"),
+		"--output-document", ItemInterpolation("%(item_dir)s/wget.tmp"),
+		"--truncate-output",
+		"--warc-file", ItemInterpolation("%(item_dir)s/%(warc_file_base)s"),
+		"--warc-header", "operator: Archive Team",
+		"--warc-header", "patch-script-version: " + VERSION,
+		"--warc-header", ItemInterpolation("patch-item-name: %(item_name)s"),
+		"--page-requisites",
+		"--span-hosts",
+		"-e", "robots=off",
+		"--waitretry", "5",
+		"--timeout", "60",
+		"-i", ItemInterpolation("%(manifest_fn)s")
+	],
+	max_tries = 3,
+	accept_on_exit_code = [ 0, 4, 6, 8 ]),
 	PrepareStatsForTracker(
 		defaults = { "downloader": downloader, "version": VERSION },
 		file_groups = {
-			"data": [ ItemInterpolation("%(item_dir)/%(item_name)s.warc.gz") ]
-		},
-		id_function = calculate_item_id
+      		"data": [ ItemInterpolation("%(item_dir)s/%(warc_file_base)s.warc.gz") ]
+		}
+	),
+	MoveFiles(),
+	LimitConcurrent(NumberConfigValue(min=1, max=4, default="1", name="shared:rsync_threads", title="Rsync threads", description="The maximum number of concurrent uploads."),
+	  UploadWithTracker(
+		TRACKER,
+	    downloader = downloader,
+	    version = VERSION,
+	    files = [
+	      ItemInterpolation("%(data_dir)s/%(warc_file_base)s.warc.gz")
+	    ],
+	    rsync_target_source_path = ItemInterpolation("%(data_dir)s/"),
+	    rsync_extra_args = [
+	      "--recursive",
+	      "--partial",
+	      "--partial-dir", ".rsync-tmp"
+	    ]
+	  ),
 	),
 	SendDoneToTracker(
 		tracker_url = TRACKER,
