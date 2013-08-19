@@ -50,40 +50,40 @@ class MoveFiles(SimpleTask):
     shutil.rmtree("%(item_dir)s" % item)
 
 class CannotRetrieveItemError(Exception):
-	def __init__(self, code):
-		self.code = code
+    def __init__(self, code):
+        self.code = code
 
-	def __str__(self):
-		return "status code %s" % repr(self.code)
+    def __str__(self):
+        return "status code %s" % repr(self.code)
 
 class ExpandItem(SimpleTask):
-	def __init__(self):
-		SimpleTask.__init__(self, "ExpandItem")
+    def __init__(self):
+        SimpleTask.__init__(self, "ExpandItem")
 
-		self.http_client = HTTPClient()
+        self.http_client = HTTPClient()
 
-	def process(self, item):
-		req = HTTPRequest(url='%s/%s' % (RESOLVER, item["item_name"]),
-				auth_username=CREDS[0],
-				auth_password=CREDS[1])
+    def process(self, item):
+        req = HTTPRequest(url='%s/%s' % (RESOLVER, item["item_name"]),
+                auth_username=CREDS[0],
+                auth_password=CREDS[1])
 
-		resp = self.http_client.fetch(req)
+        resp = self.http_client.fetch(req)
 
-		if resp.code != 200:
-			raise CannotRetrieveItemError(resp.status_code)
+        if resp.code != 200:
+            raise CannotRetrieveItemError(resp.status_code)
 
-		doc = json.loads(resp.body)
-		manifest_fn = "%s/manifest" % item["item_dir"]
+        doc = json.loads(resp.body)
+        manifest_fn = "%s/manifest" % item["item_dir"]
 
-		f = open(manifest_fn, 'w')
-		for url in doc['urls']:
-			f.write("%s\n" % url)
-		f.close
+        f = open(manifest_fn, 'w')
+        for url in doc['urls']:
+            f.write("%s\n" % url)
+        f.close
 
-		item["manifest_fn"] = manifest_fn
+        item["manifest_fn"] = manifest_fn
 
 def calculate_item_id(item):
-	return item["item_name"]
+    return item["item_name"]
 
 project = Project(
   title = "Patchy",
@@ -94,56 +94,56 @@ project = Project(
 )
 
 pipeline = Pipeline(
-	GetItemFromTracker(TRACKER, downloader),
-	PrepareDirectories(warc_prefix="patch.com"),
-	ExpandItem(),
-	WgetDownload([ "./wget-lua",
-		"-U", USER_AGENT,
-		"-o", ItemInterpolation("%(item_dir)s/wget.log"),
-		"--lua-script", "patch.lua",
-		"--load-cookies", ItemInterpolation("%(item_dir)s/cookies.txt"),
-		"--output-document", ItemInterpolation("%(item_dir)s/wget.tmp"),
-		"--truncate-output",
-		"--warc-file", ItemInterpolation("%(item_dir)s/%(warc_file_base)s"),
-		"--warc-header", "operator: Archive Team",
-		"--warc-header", "patch-script-version: " + VERSION,
-		"--warc-header", ItemInterpolation("patch-item-name: %(item_name)s"),
-		"--page-requisites",
-		"--span-hosts",
-		"-e", "robots=off",
-		"--waitretry", "5",
-		"--timeout", "60",
-		"-i", ItemInterpolation("%(manifest_fn)s")
-	],
-	max_tries = 3,
-	accept_on_exit_code = [ 0, 4, 6, 8 ]),
-	PrepareStatsForTracker(
-		defaults = { "downloader": downloader, "version": VERSION },
-		file_groups = {
-      		"data": [ ItemInterpolation("%(item_dir)s/%(warc_file_base)s.warc.gz") ]
-		}
-	),
-	MoveFiles(),
-	LimitConcurrent(NumberConfigValue(min=1, max=4, default="1", name="shared:rsync_threads", title="Rsync threads", description="The maximum number of concurrent uploads."),
-	  UploadWithTracker(
-		TRACKER,
-	    downloader = downloader,
-	    version = VERSION,
-	    files = [
-	      ItemInterpolation("%(data_dir)s/%(warc_file_base)s.warc.gz")
-	    ],
-	    rsync_target_source_path = ItemInterpolation("%(data_dir)s/"),
-	    rsync_extra_args = [
-	      "--recursive",
-	      "--partial",
-	      "--partial-dir", ".rsync-tmp"
-	    ]
-	  ),
-	),
-	SendDoneToTracker(
-		tracker_url = TRACKER,
-		stats = ItemValue("stats")
-  	)
+    GetItemFromTracker(TRACKER, downloader),
+    PrepareDirectories(warc_prefix="patch.com"),
+    ExpandItem(),
+    WgetDownload([ "./wget-lua",
+        "-U", USER_AGENT,
+        "-o", ItemInterpolation("%(item_dir)s/wget.log"),
+        "--lua-script", "patch.lua",
+        "--load-cookies", ItemInterpolation("%(item_dir)s/cookies.txt"),
+        "--output-document", ItemInterpolation("%(item_dir)s/wget.tmp"),
+        "--truncate-output",
+        "--warc-file", ItemInterpolation("%(item_dir)s/%(warc_file_base)s"),
+        "--warc-header", "operator: Archive Team",
+        "--warc-header", "patch-script-version: " + VERSION,
+        "--warc-header", ItemInterpolation("patch-item-name: %(item_name)s"),
+        "--page-requisites",
+        "--span-hosts",
+        "-e", "robots=off",
+        "--waitretry", "5",
+        "--timeout", "60",
+        "-i", ItemInterpolation("%(manifest_fn)s")
+    ],
+    max_tries = 3,
+    accept_on_exit_code = [ 0, 4, 6, 8 ]),
+    PrepareStatsForTracker(
+        defaults = { "downloader": downloader, "version": VERSION },
+        file_groups = {
+            "data": [ ItemInterpolation("%(item_dir)s/%(warc_file_base)s.warc.gz") ]
+        }
+    ),
+    MoveFiles(),
+    LimitConcurrent(NumberConfigValue(min=1, max=4, default="1", name="shared:rsync_threads", title="Rsync threads", description="The maximum number of concurrent uploads."),
+      UploadWithTracker(
+        TRACKER,
+        downloader = downloader,
+        version = VERSION,
+        files = [
+          ItemInterpolation("%(data_dir)s/%(warc_file_base)s.warc.gz")
+        ],
+        rsync_target_source_path = ItemInterpolation("%(data_dir)s/"),
+        rsync_extra_args = [
+          "--recursive",
+          "--partial",
+          "--partial-dir", ".rsync-tmp"
+        ]
+      ),
+    ),
+    SendDoneToTracker(
+        tracker_url = TRACKER,
+        stats = ItemValue("stats")
+    )
 )
 
-# vim:ts=4:sw=4:noet:tw=78
+# vim:ts=4:sw=4:et:tw=78
