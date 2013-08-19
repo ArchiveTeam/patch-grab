@@ -101,7 +101,6 @@ pipeline = Pipeline(
         "-U", USER_AGENT,
         "-o", ItemInterpolation("%(item_dir)s/wget.log"),
         "--lua-script", "patch.lua",
-        "--load-cookies", ItemInterpolation("%(item_dir)s/cookies.txt"),
         "--output-document", ItemInterpolation("%(item_dir)s/wget.tmp"),
         "--truncate-output",
         "--warc-file", ItemInterpolation("%(item_dir)s/%(warc_file_base)s"),
