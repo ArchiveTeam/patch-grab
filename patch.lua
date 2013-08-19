@@ -1,5 +1,3 @@
-dofile("md5.lua")
-
 function os.capture(cmd)
   local f = assert(io.popen(cmd, 'r'), "unable to start "..cmd)
   local s = f:read('*a')
@@ -19,9 +17,8 @@ local seen = {}
 
 wget.callbacks.download_child_p = function(urlpos, parent, depth, start_url_parsed, iri, verdict, reason)
 	local url = urlpos.url.url
-	local hash = md5.Calc(url)
 
-	if (seen[hash]) then
+	if (seen[url]) then
 		return false
 	else
 		return true
@@ -47,8 +44,7 @@ wget.callbacks.httploop_result = function(url, err, http_status)
 		local out = os.capture("file "..loc)
 
 		-- We've seen this URL; let's not see it again.
-		local hash = md5.Calc(url.url)
-		seen[hash] = true
+		seen[url.url] = true
 
 		if (string.find(out, "HTML") ~= nil) then
 			-- OK, this is probably an HTML document.  Get all of its links.
