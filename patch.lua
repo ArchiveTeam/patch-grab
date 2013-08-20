@@ -44,7 +44,7 @@ wget.callbacks.httploop_result = function(url, err, http_status)
 		-- We've seen this URL; let's not see it again.
 		seen[url.url] = true
 
-		if (string.find(out, "HTML") ~= nil) then
+		if (string.find(string.lower(out), "html") ~= nil) then
 			-- OK, this is probably an HTML document.  Get all of its links.
 			io.stdout:write("Scraping "..url.url.." for links\n")
 			io.stdout:flush()
