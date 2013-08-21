@@ -14,6 +14,21 @@ from seesaw.pipeline import *
 from seesaw.externalprocess import *
 from seesaw.tracker import *
 
+from seesaw.util import find_executable
+
+WGET_LUA = find_executable('wget-lua', '1.14.lua.20130523-9a5c',
+                           ['./wget-lua', 'wget-lua'])
+
+CURL = find_executable('curl', '7.2', ['curl'])
+
+if not WGET_LUA:
+    raise Exception("wget-lua cannot be found")
+
+if not CURL:
+    raise Exception("curl cannot be found")
+
+# ----
+
 DATA_DIR = "data"
 USER_AGENT = "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:23.0) Gecko/20100101 Firefox/23.0"
 VERSION = "20130819.02"
