@@ -1,3 +1,3 @@
 [submodule "scroller-capture/vendor/WarcProxy"]
 	path = scroller-capture/vendor/WarcProxy
-	url = git@github.com:ArchiveTeam/WarcProxy.git
+	url = https://github.com/ArchiveTeam/WarcProxy.git
