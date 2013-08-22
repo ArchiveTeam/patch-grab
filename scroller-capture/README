@@ -1,0 +1,6 @@
+To run:
+
+1. cd .. && git submodule update --init && cd -
+2. Run get-phantomjs.sh
+3. tar xjvf [phantomjs archive] -C vendor
+4. bundle install
