@@ -105,7 +105,7 @@ project = Project(
   project_html = """
       <p>Saving patch.com sites.</p>
   """,
-  utc_deadline = datetime.datetime(2013, 8, 31, 12, 0, 0)
+  utc_deadline = datetime.datetime(2013, 10, 1, 12, 0, 0)
 )
 
 pipeline = Pipeline(
