@@ -26,13 +26,17 @@ end
 wget.callbacks.httploop_result = function(url, err, http_status)
 	local code = http_status.statcode
 
-	-- HTTP 420 means that we're rate-limited.  We have to abort.
+	-- HTTP 420 means that we're rate-limited.  Sleep for a while and then
+	-- try again.
 	if (code == 420) then
 		io.stdout:write("Server returned status "..code.."; you've exceeded rate limits.\n")
-		io.stdout:write("You may want to move to another IP.  Exiting...\n")
+		io.stdout:write("Will retry "..url.." after one hour.\n")
 		io.stdout:flush()
 
-		return wget.actions.ABORT
+		os.execute('sleep 3600')
+
+		-- Retry this URL.
+		return wget.actions.CONTINUE
 	end
 
 	-- On code 2xx, extract URLs and send them to the URL storage
