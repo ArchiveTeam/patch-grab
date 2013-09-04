@@ -31,7 +31,7 @@ if not CURL:
 
 DATA_DIR = "data"
 USER_AGENT = "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:23.0) Gecko/20100101 Firefox/23.0"
-VERSION = "20130821.01"
+VERSION = "20130904.01"
 TRACKER = "http://quilt.at.ninjawedding.org/patchy"
 RESOLVER = "http://quilt.at.ninjawedding.org:81"
 CREDS = "ArchiveTeam:3boiqJvshItPBa66".split(':')
