@@ -30,7 +30,7 @@ wget.callbacks.httploop_result = function(url, err, http_status)
 	-- try again.
 	if (code == 420) then
 		io.stdout:write("Server returned status "..code.."; you've exceeded rate limits.\n")
-		io.stdout:write("Will retry "..url.." after one hour.\n")
+		io.stdout:write("Will retry "..url.url.." after one hour.\n")
 		io.stdout:flush()
 
 		os.execute('sleep 3600')
