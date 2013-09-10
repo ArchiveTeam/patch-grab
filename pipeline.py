@@ -109,7 +109,7 @@ project = Project(
 )
 
 pipeline = Pipeline(
-    GetItemFromTracker(TRACKER, downloader),
+    GetItemFromTracker(TRACKER, downloader, VERSION),
     PrepareDirectories(warc_prefix="patch.com"),
     ExpandItem(),
     WgetDownload([ "./wget-lua",
